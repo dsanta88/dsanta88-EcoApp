@@ -1,0 +1,109 @@
+﻿@page "/indexusuarios"
+@using EcoApp.Shared
+@inject HttpClient Http
+@inject NavigationManager navigationManager
+@using Newtonsoft.Json;
+@inject IJSRuntime JSRuntime
+@using System.IO
+@inject HttpClient _httpClient
+
+<div class="row alert bg-info">
+    <div class="col-md-5">
+        <h5> <b>Usuarios</b></h5>
+    </div>
+</div>
+<br />
+<div class="row">
+    <div class="col-md-2">
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_box" Text="Nuevo" Size="ButtonSize.Medium" Click="@Add">
+        </RadzenButton>
+    </div>
+
+    <div class="col-md-3">
+        <input class="bg-light" type="file" @ref="@inputElement" accept=".xls, .xlsx">
+    </div>
+
+
+</div>
+<br>
+<div class="row">
+    <div class="col-md-2">
+    </div>
+    <div class="col-md-2">
+        <a href="../PlantillasExcel/Empleados.xlsx" target="_blank">Descargar Plantilla</a>
+    </div>
+
+</div>
+
+<RadzenGrid AllowFiltering="true"
+            AllowColumnResize="true"
+            FilterMode="FilterMode.Simple"
+            AllowPaging="true"
+            PageSize="20"
+            AllowSorting="true"
+            Data="@list"
+            TItem="Usuario"
+            LogicalFilterOperator="LogicalFilterOperator.Or">
+    <Columns>
+        <RadzenGridColumn TItem="Usuario" Property="Nombre" Title="Nombre" Width="80%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Usuario" Property="Email" Title="Email" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Usuario" Property="Celular" Title="Celular" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Usuario" Property="NumeroCasa" Title="Casa N°" Width="30%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Usuario" Property="RolDescripcion" Title="Rol" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Usuario" Property="EstadoDescripcion" Title="Estado" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Usuario" Context="Usuario" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="100%">
+            <Template Context="Usuario">
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Text="Editar" Size="ButtonSize.Medium" Click="@((args) =>Edit(Usuario.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+
+    </Columns>
+</RadzenGrid>
+
+
+@code {
+
+    List<Usuario> list;
+    Response response = new Response();
+    ElementReference inputElement;
+    public int IsDownloadStarted { get; set; } = 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await LoadData();
+    }
+
+    protected async Task LoadData()
+    {
+        response = await Http.GetFromJsonAsync<Response>($"api/usuarios");
+        if (response.IsSuccessful)
+        {
+            list = JsonConvert.DeserializeObject<List<Usuario>>(response.Data.ToString());
+
+            list.Where(x => x.Estado == true).ToList().ForEach(i => i.EstadoDescripcion = "ACTIVO");
+            list.Where(x => x.Estado == false).ToList().ForEach(i => i.EstadoDescripcion = "INACTIVO");
+
+            list.Where(x => x.Rol == "1").ToList().ForEach(i => i.RolDescripcion = "ADMINISTRADOR");
+            list.Where(x => x.Rol == "2").ToList().ForEach(i => i.RolDescripcion = "PROPIERTARIO");
+            list.Where(x => x.Rol == "3").ToList().ForEach(i => i.RolDescripcion = "ARRENDATARIO");
+            list.Where(x => x.Rol == "4").ToList().ForEach(i => i.RolDescripcion = "TRABAJADOR");
+
+        }
+    }
+
+    public void Add()
+    {
+        navigationManager.NavigateTo("/formusuarios");
+    }
+
+
+    public void Edit(string id)
+    {
+        navigationManager.NavigateTo("/formusuarios/" + id);
+    }
+
+
+}

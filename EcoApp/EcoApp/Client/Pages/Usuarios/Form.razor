@@ -1,0 +1,238 @@
+﻿@page "/formusuarios"
+@page "/formusuarios/{Id}"
+@using EcoApp.Shared
+@inject HttpClient Http
+@using MatBlazor
+@inject NavigationManager navigationManager
+@using Newtonsoft.Json
+@inject IJSRuntime js
+
+
+<div class="row alert bg-info">
+    <div class="row col-md-1">
+
+    </div>
+    <div class="col-md-5">
+        <h5> <b>@titulo</b></h5>
+    </div>
+</div>
+
+@if(msgError != null)
+{
+    <div class="row alert bg-danger">
+        <div class="row col-md-1">
+
+        </div>
+        <div class="col-md-5">
+            <MatThemeProvider>
+                <MatIcon Icon="cancel"> </MatIcon>   @msgError
+            </MatThemeProvider>
+        </div>
+    </div>
+}
+
+<EditForm Model="@model" OnValidSubmit="Save">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatStringField @bind-Value="@model.Nombre" Label="Nombre" Style="width:100%" Required="true"></MatStringField>
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <a>Numero de casa</a>
+            <RadzenDropDown AllowClear="true"
+                            AllowFiltering="true"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            @bind-Value="model.NumeroCasa"
+                            Multiple="false"
+                            Placeholder="[SELECCIONAR]"
+                            Data="@lstHouses"
+                            TextProperty="Name"
+                            ValueProperty="Code"
+                            Style="width:100%" />
+
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatStringField @bind-Value="@model.Email" Label="Email" Type="email" Style="width:100%" Required="true"></MatStringField>
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatStringField @bind-Value="@model.Clave" Type="password" Label="Clave" Style="width:100%" Required="true"></MatStringField>
+        </div>
+    </div>
+    <br />
+
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatStringField @bind-Value="@model.Celular" Type="number" Label="Celular" Style="width:100%" Required="true"></MatStringField>
+        </div>
+
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatSelect Label="Rol" @bind-Value="model.Rol">
+                <MatOptionString></MatOptionString>
+                <MatOptionString Value="1">ADMINISTRADOR</MatOptionString>
+                <MatOptionString Value="2">PROPIETARIO</MatOptionString>
+                <MatOptionString Value="3">OPERARIO</MatOptionString>
+                <MatOptionString Value="4">TRABAJADOR</MatOptionString>
+            </MatSelect>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatSelect Label="Estado" @bind-Value=@model.Estado Required="true">
+                <MatOption Value=true>ACTIVO</MatOption>
+                <MatOption Value=false>INACTIVO</MatOption>
+            </MatSelect>
+        </div>
+    </div>
+    <hr />
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-2">
+            <MatThemeProvider Theme="@theme3">
+                <MatButton Raised="true" Icon="cancel" @onclick="Cancelar">Cancelar</MatButton>
+            </MatThemeProvider>
+        </div>
+        <div class="col-md-2">
+
+            <MatThemeProvider Theme="@theme1">
+                <MatButton Raised="true" Icon="save" Type="submit">Guardar</MatButton>
+            </MatThemeProvider>
+        </div>
+    </div>
+</EditForm>
+<br />
+@code {
+
+    [Parameter] public string Id { get; set; }
+
+    public Usuario model = new Usuario();
+    Response response = new Response();
+    string titulo = "";
+    string msgError = null;
+    List<House> lstHouses = new List<House>();
+
+
+    MatTheme theme1 = new MatTheme()
+    {
+        Primary = "green",
+    };
+    MatTheme theme3 = new MatTheme()
+    {
+        Primary = "red",
+    };
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        GetHouses();
+        await LoadData();
+    }
+
+
+
+    protected async Task Save()
+    {
+
+        model.Nombre = model.Nombre.ToUpper();
+        msgError = null;
+
+        if(model.Celular.Length!=10)
+        {
+            msgError = "El celular debe tener 11 digitos";
+        }
+        if (model.Rol =="" || model.Rol == null)
+        {
+            msgError = "Debe seleccionar el rol";
+        }
+
+        if (msgError == null)
+        {
+            if (Id != null)
+            {
+
+                var result = await Http.PostAsJsonAsync<Usuario>($"api/Usuarios", model);
+                response = result.Content.ReadFromJsonAsync<Response>().Result;
+            }
+            else
+            {
+                var result = await Http.PostAsJsonAsync<Usuario>($"api/Usuarios", model);
+                response = result.Content.ReadFromJsonAsync<Response>().Result;
+            }
+
+            if (response.IsSuccessful)
+            {
+                navigationManager.NavigateTo("/indexusuarios");
+            }
+            else
+            {
+                msgError = response.Message;
+                await js.InvokeAsync<string>("MensajeAlerta", msgError);
+            }
+        }
+        else
+        {
+            await js.InvokeAsync<string>("MensajeAlerta", msgError);
+        }
+
+    }
+
+    public void Cancelar()
+    {
+        navigationManager.NavigateTo("/indexusuarios");
+    }
+
+
+    protected async Task LoadData()
+    {
+        model = new Usuario();
+
+
+        if (Id !=null)
+        {
+            titulo = "EDITAR USUARIO";
+            response = await Http.GetFromJsonAsync<Response>($"api/usuarios/GetUserById/{Id}");
+            if (response.IsSuccessful)
+            {
+                model = JsonConvert.DeserializeObject<Usuario>(response.Data.ToString());
+            }
+
+        }
+        else
+        {
+            model.Estado = true;
+            titulo = "NUEVO USUARIO";
+        }
+    }
+
+
+    public bool GetHouses()
+    {
+
+        for(int i=0; i <= 50; i++)
+        {
+            House house = new House();
+            house.Code = i;
+            house.Name = " CASA " + i.ToString();
+            lstHouses.Add(house);
+        }
+
+        return true;
+    }
+
+    public class House
+    {
+        public int Code { get; set; }
+        public string Name { get; set; }
+    }
+}

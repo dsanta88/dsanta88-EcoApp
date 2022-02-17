@@ -1,0 +1,174 @@
+﻿@page "/"
+@page "/login"
+@layout LayoutLogin
+@inject IJSRuntime js
+@inject NavigationManager navigationManager
+@inject HttpClient Http
+@using MatBlazor
+@using Newtonsoft.Json;
+@using EcoApp.Shared
+@inject ServicioSingleton singleton
+
+
+<div class="row alert" style="text-align: center;background-color:white">
+    <br />
+    <div class="col-md-12">
+
+    </div>
+</div>
+
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+
+<div class="row">
+    <div class="col-md-1">
+
+    </div>
+    <div class="col-md-4">
+        <img style="width:100%" src="Images/logo.png" />
+    </div>
+    <div class="col-md-4">
+        <div class="card" style="text-align:center;background-color:forestgreen;border-radius: 40px; width:90%">
+
+
+            <EditForm Model="@model" OnValidSubmit="Autenticar">
+                <br />
+                <div class="row">
+                    <div class="col-md-2"></div>
+
+                    <div class="col-md-4">
+                        @*<label style="color:white; text-align:left">Email</label>*@
+                        <MatStringField @bind-Value="@model.Email" Style="width:300px" Label="Email" PlaceHolder="Email" Icon="person_pin"></MatStringField>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-2"></div>
+
+                    <div class="col-md-4">
+                        @*<label style="color:white; text-align:left">Clave</label>*@
+                        <MatStringField @bind-Value="@model.Clave" Style="width:300px" Label="Clave" PlaceHolder="Clave" Type="password" Icon="lock"></MatStringField>
+                        <br />
+                        <a href="" style="color:white; text-align:left">Olvido su contraseña?</a>
+                    </div>
+                </div>
+
+                <br />
+                <div class="row">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-4">
+
+                        <MatButton Raised="true" Icon="save" Type="submit" Style="text-align: center;background-color:white;width:300px"><label style="color:black">Ingresar</label></MatButton>
+
+                    </div>
+                </div>
+            </EditForm>
+            <br />
+
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+
+    string key = "userInfo";
+    Response response = new Response();
+    Usuario user = new Usuario();
+    Usuario model = new Usuario();
+    string result = "";
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        singleton.IsLogueado = false;
+    }
+
+
+    protected async Task Autenticar()
+    {
+        try
+        {
+            result = "";
+
+            if (model.Email == null || model.Email == "")
+            {
+                result = "El email es obligatorio.";
+            }
+            else if (model.Clave == null || model.Clave == "")
+            {
+                result = "La clave es obligatoria.";
+            }
+
+            if (result == "")
+            {
+                Usuario user = new Usuario();
+                response = await Http.GetFromJsonAsync<Response>($"api/usuarios/Autenticar/{model.Email}/{model.Clave}");
+                if (response.IsSuccessful)
+                {
+                    user = JsonConvert.DeserializeObject<Usuario>(response.Data.ToString());
+                }
+
+
+                if (user.Id!=null)
+                {
+                    if (user.Estado)
+                    {
+
+                        result = "";
+                        singleton.IsLogueado = true;
+                        singleton.UsuarioId = user.Id;
+                        singleton.UsuarioNombre = user.Nombre;
+                        singleton.Email = user.Email;
+
+                        await RegistrarAuditoria(user);
+                        navigationManager.NavigateTo("/index");
+                    }
+                    else
+                    {
+                        result = "El usuario " + user.Email + " esta INACTIVO.";
+                    }
+
+                }
+                else
+                {
+                    result = "Usuario o Password no valido";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            result = ex.Message;
+        }
+
+        StateHasChanged();
+        if (result != "" && result != null)
+        {
+            await js.InvokeAsync<string>("MensajeAlerta", result);
+        }
+    }
+
+    protected async Task RegistrarAuditoria(Usuario model)
+    {
+
+        //Auditoria auditoria = new Auditoria();
+        //auditoria.EmpresaId = singleton.EmpresaId;
+        //auditoria.Accion = "INICIARSESION";
+        //auditoria.Tabla = "NA";
+        //auditoria.Usuario = model.Email;
+        //auditoria.UsuarioNombre = model.NombreCompleto;
+        //auditoria.UsuarioRegistroId = model.Id;
+
+        //auditoria.Mensaje = "El siguiente usuario inicio sesión: " + "----Id: " + model.Id + "----NombreCompleto:" + model.NombreCompleto + "----Email: " + model.Email;
+
+
+        //await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
+
+    }
+}
+
