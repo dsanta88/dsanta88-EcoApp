@@ -1,12 +1,15 @@
-﻿@*@page "/formingresos"
+﻿@page "/formingresos"
 @page "/formingresos/{Id}"
 @using EcoApp.Shared
+@using System.IO
 @inject HttpClient Http
 @using MatBlazor
 @inject NavigationManager navigationManager
 @using Newtonsoft.Json
 @inject IJSRuntime js
 @inject ServicioSingleton singleton
+@inject IFileReaderService fileReaderService;
+
 
 <div class="row alert bg-info">
     <div class="row col-md-1">
@@ -70,7 +73,7 @@
         <div class="col-md-1"></div>
         <div class="col-md-3">
             <b>Adjuntar documento</b>
-            <input class="bg-light" type="file" @ref="@inputElement" accept=".pdf .png .jpg ">
+            <input class="bg-light" type="file" @ref="@inputElement" accept=".pdf,.png,.jpg,.image ">
         </div>
 
     </div>
@@ -91,8 +94,20 @@
             <MatTextField @bind-Value="@model.Observacion" TextArea="true" Style="width:100%"></MatTextField>
         </div>
     </div>
-    <hr />
+    <br />
+    @if (model.ArchivoRuta != null)
+    {
+      
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+        <embed src="@model.ArchivoRuta" style="width:100%;height:500px" controls />
+        <br />
+    </div>
+</div>
+    }
 
+    <hr />
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-2">
@@ -123,9 +138,10 @@
     string titulo = "";
     string msgError = null;
     bool visibleGuardar = true;
-    public bool selectDocument = false;
     ElementReference inputElement;
-
+    string fileNombre = "";
+    string fileExtension = "";
+    string fileOld = "";
 
     MatTheme theme1 = new MatTheme()
     {
@@ -181,6 +197,7 @@
             if (response.IsSuccessful)
             {
                 model = JsonConvert.DeserializeObject<Ingreso>(response.Data.ToString());
+                fileOld = model.ArchivoRuta;
             }
 
         }
@@ -190,6 +207,81 @@
         }
     }
 
+    protected async Task Save()
+
+    {
+        string accion = "";
+        visibleGuardar = false;
+        model.UsuarioRegistroId = singleton.UsuarioId;
+
+        msgError = null;
+        model.UsuarioRegistroId = singleton.UsuarioId;
+
+
+        if (model.FechaPago > DateTime.Now)
+        {
+            msgError = "La fecha de pago debe ser menor o igual a la fecha actual.";
+        }
+        else if (model.UsuarioId == null)
+        {
+            msgError = "Debe seleccionar el usuario";
+        }
+
+        else if (model.Valor <= 0)
+        {
+            msgError = "El valor debe ser mayor a cero.";
+        }
+
+
+        if (msgError == null)
+        {
+
+
+            await CargarArchivo();
+
+
+
+            if (msgError == null)
+            {
+                if (Id != null)
+                {
+                    accion = "Editar";
+                }
+                else
+                {
+                    accion = "Ingresar";
+                }
+
+                var result = await Http.PostAsJsonAsync<Ingreso>($"api/ingresos", model);
+                response = result.Content.ReadFromJsonAsync<Response>().Result;
+
+                if (response.IsSuccessful)
+                {
+                    await RegistrarAuditoria(model, accion);
+                    navigationManager.NavigateTo("/indexingresos");
+                }
+                else
+                {
+                    msgError = response.Message;
+                    await js.InvokeAsync<string>("MensajeAlerta", msgError);
+                }
+            }
+            else
+            {
+                await js.InvokeAsync<string>("MensajeAlerta", msgError);
+            }
+
+        }
+        else
+        {
+            await js.InvokeAsync<string>("MensajeAlerta", msgError);
+        }
+
+        visibleGuardar = true;
+
+    }
+
+
     public async Task CargarArchivo()
     {
 
@@ -197,7 +289,11 @@
         {
             foreach (var file in await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync())
             {
-                selectDocument = true;
+                var fileInfo = await file.ReadFileInfoAsync();
+                fileExtension = System.IO.Path.GetExtension(fileInfo.Name);
+                fileNombre = DateTime.Now.Year.ToString() + DateTime.Now.Month.ToString() + DateTime.Now.Day.ToString() + DateTime.Now.Hour.ToString() + DateTime.Now.Minute.ToString() + DateTime.Now.Second.ToString() + fileExtension;
+                model.ArchivoRuta = "../Upload/Ingresos/"+fileNombre;
+
                 string ArchivoBase64;
 
                 using (MemoryStream memorystream = await file.CreateMemoryStreamAsync(4 * 1024))
@@ -207,18 +303,23 @@
                     memorystream.Read(bytesimage, 0, (int)memorystream.Length);
                     ArchivoBase64 = Convert.ToBase64String(bytesimage);
 
-
                     Archivo archivo = new Archivo();
                     archivo.Base64 = ArchivoBase64;
-                    archivo.Formato = formato;
-                    archivo.Nombre = nombreArchivo;
-                    archivo.EmpresaId = singleton.EmpresaId;
+                    archivo.Formato = fileExtension;
+                    archivo.Nombre = fileNombre;
+                    archivo.RutaFile = model.ArchivoRuta.Replace("../", @"\");
 
                     var result = await Http.PostAsJsonAsync<Archivo>("api/uploadfiles", archivo);
                     response = result.Content.ReadFromJsonAsync<Response>().Result;
                     if (response.IsSuccessful)
                     {
-                        stateUploadFile = true;
+                        //string rutaDelete = JsonConvert.DeserializeObject<Archivo>(response.Data.ToString()).RutaCarpeta;
+                        //rutaDelete = rutaDelete + fileOld.Replace("../", @"");
+                        //rutaDelete = @rutaDelete.Replace("/", @"\");
+                        //if (File.Exists(rutaDelete))
+                        //{
+                        //    File.Delete(rutaDelete);
+                        //}
                     }
                     else
                     {
@@ -231,7 +332,6 @@
 
         catch (Exception ex)
         {
-            stateUploadFile = false;
             msgError = ex.Message;
         }
     }
@@ -239,35 +339,38 @@
 
     protected async Task RegistrarAuditoria(Ingreso model, string accion)
     {
-        //        string accionDescipcion = "";
+        string accionDescipcion = "";
 
-        //        if (accion.ToLower() == "editar")
-        //        {
-        //            accionDescipcion = "edito";
-        //        }
-        //        else if (accion.ToLower() == "ingresar")
-        //        {
-        //            accionDescipcion = "ingreso";
-        //        }
-        //        else if (accion.ToLower() == "eliminar")
-        //        {
-        //            accionDescipcion = "elimino";
-        //        }
+        if (accion.ToLower() == "editar")
+        {
+            accionDescipcion = "edito";
+        }
+        else if (accion.ToLower() == "ingresar")
+        {
+            accionDescipcion = "ingreso";
+        }
+        else if (accion.ToLower() == "eliminar")
+        {
+            accionDescipcion = "elimino";
+        }
 
-        //¿
 
-        //        Auditoria auditoria = new Auditoria();
-        //        auditoria.Accion = accion.ToUpper();
-        //        auditoria.Tabla = "Ingresos";
-        //        auditoria.Usuario = singleton.Email;
-        //        auditoria.UsuarioNombre = singleton.UsuarioNombre;
-        //        auditoria.UsuarioRegistroId = singleton.UsuarioId;
-        //        auditoria.FechaRegistro = DateTime.Now;
 
-        //        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente Ingreso:----" + "Id: " + model.Id + "----RazonSocial:" + model.RazonSocial + "----Nit: " + model.Nit + "----TipoProveedor:" + tipoDescripcion + "----Email:" + model.Email + "----Celular:" + model.Celular + "----Teléfono:" + model.Telefono + "----Observación:" + model.Observacion + "----Estado:" + model.EstadoDescripcion;
+        Auditoria auditoria = new Auditoria();
+        auditoria.Accion = accion.ToUpper();
+        auditoria.Tabla = "Ingresos";
+        auditoria.Usuario = singleton.Email;
+        auditoria.UsuarioNombre = singleton.UsuarioNombre;
+        auditoria.UsuarioRegistroId = singleton.UsuarioId;
+        auditoria.FechaRegistro = DateTime.Now;
 
-        //        await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
+        string tipoIngreso = listIngresosTipos.Where(x => x.Id == model.IngresoTipoId).FirstOrDefault().Nombre;
+        string usuario = listUsuarios.Where(x => x.Id == model.UsuarioId).FirstOrDefault().Nombre;
+
+        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente Ingreso:----" + "Id: " + model.Id + "----FechaPago:" + model.FechaPago  + "----TipoIngreso:" + tipoIngreso + "----Usuario: " + usuario + "----Valor:" + model.Valor;
+
+        await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
 
     }
 
-}*@
+}

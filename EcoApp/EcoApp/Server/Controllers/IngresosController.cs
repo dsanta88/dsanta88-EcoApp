@@ -26,7 +26,7 @@ namespace EcoApp.Server.Controllers
             Response response = new Response();
             try
             {
-                List<Ingreso> list = datos.ObtenerTodos();
+                List<Ingreso> list = datos.Obtener("-1");
                 response.IsSuccessful = true;
                 response.Data = list;
             }
@@ -46,7 +46,7 @@ namespace EcoApp.Server.Controllers
             Response response = new Response();
             try
             {
-                Ingreso obj = datos.Obtener(id);
+                Ingreso obj = datos.Obtener(id).FirstOrDefault();
                 response.IsSuccessful = true;
                 response.Data = obj;
             }

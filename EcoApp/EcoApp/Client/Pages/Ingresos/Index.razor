@@ -31,11 +31,19 @@
             TItem="Ingreso"
             LogicalFilterOperator="LogicalFilterOperator.Or">
     <Columns>
-        <RadzenGridColumn TItem="Ingreso" Property="FechaPago" Title="FechaPago" Width="80%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Ingreso" Property="FechaPago" Title="FechaPago" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Ingreso" Property="IngresoTipoNombre" Title="Tipo" Width="60%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Ingreso" Property="IngresoUsuarioNombre" Title="Usuario" Width="60%"></RadzenGridColumn>
         <RadzenGridColumn TItem="Ingreso" Property="Valor" Title="Valor" Width="50%"></RadzenGridColumn>
         <RadzenGridColumn TItem="Ingreso" Context="Ingreso" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="100%">
             <Template Context="Ingreso">
                 <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Text="Editar" Size="ButtonSize.Medium" Click="@((args) =>Edit(Ingreso.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+        <RadzenGridColumn TItem="Ingreso" Context="Ingreso" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="50%">
+            <Template Context="Ingreso">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Eliminar" Size="ButtonSize.Medium" Click="@((args) =>Delete(Ingreso.Id))">
                 </RadzenButton>
             </Template>
         </RadzenGridColumn>
@@ -80,5 +88,8 @@
         navigationManager.NavigateTo("/formingresos/" + id);
     }
 
-
+    public void Delete(string id)
+    {
+        navigationManager.NavigateTo("/deleteingresos/" + id);
+    }
 }

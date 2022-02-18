@@ -22,7 +22,7 @@ namespace EcoApp.Shared
         public string Observacion { get; set; }
 
 
-        public string RutaArchivo { get; set; }
+        public string ArchivoRuta { get; set; }
 
         public decimal Valor { get; set; }
         public DateTime FechaPago { get; set; }
@@ -30,6 +30,13 @@ namespace EcoApp.Shared
         public DateTime FechaRegistro { get; set; }
 
         public string UsuarioRegistroId { get; set; }
+
+        [BsonIgnore]
+        public string IngresoTipoNombre { get; set; }
+        [BsonIgnore]
+        public string IngresoUsuarioNombre { get; set; }
+        [BsonIgnore]
+        public string IngresoUsuarioRegistroNombre { get; set; }
 
 
     }
