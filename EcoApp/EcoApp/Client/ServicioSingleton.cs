@@ -25,6 +25,7 @@ namespace EcoApp.Client
             UsuarioNombre = "";
             Email = "";
             Rol = "";
+            EmpresaLogo = "../Images/logo.png";
         }
     }
 }

@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Proveedor.cs~RF1b6b109d.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MongoDB.Bson" Version="2.14.1" />
   </ItemGroup>
 

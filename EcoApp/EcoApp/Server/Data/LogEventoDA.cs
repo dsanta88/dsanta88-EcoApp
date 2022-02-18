@@ -1,30 +1,29 @@
 ﻿using EcoApp.Server.Helper;
 using EcoApp.Shared;
-using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EcoApp.Server.Services
+namespace EcoApp.Server.Data
 {
-    public class LogEventoService
+    public class LogEventoDA
     {
         LeerJson objJson = new LeerJson();
-        private IMongoCollection<LogEvento> _logEventos;
+        private IMongoCollection<LogEvento> table;
         string conexionMongo = "";
         string bdName = "";
-        public LogEventoService(IConfiguration configuration)
+        public LogEventoDA()
         {
             conexionMongo = objJson.GetConexionMongo();
             bdName = objJson.GetBdNameMongo();
             var client = new MongoClient(conexionMongo);
             var database = client.GetDatabase(bdName);
-            _logEventos = database.GetCollection<LogEvento>("LogEventos");
+            table = database.GetCollection<LogEvento>("LogEventos");
         }
 
-        public bool Save(Exception ex)
+        public bool LogEventoIngresar(Exception ex)
         {
             LogEvento model = new LogEvento();
             model.Fecha = DateTime.Now;
@@ -45,12 +44,12 @@ namespace EcoApp.Server.Services
 
             try
             {
-                _logEventos.InsertOne(model);
+                table.InsertOne(model);
                 return true;
             }
             catch (Exception exe)
             {
-                Save(exe);
+                LogEventoIngresar(exe);
                 return false;
             }
 

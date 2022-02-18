@@ -13,38 +13,20 @@ namespace EcoApp.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UsuariosController : ControllerBase
+    public class IngresosController : ControllerBase
     {
 
-        UsuarioDA datos = new UsuarioDA();
+        IngresoDA datos = new IngresoDA();
         LogEventoDA logDA = new LogEventoDA();
         Mensajes mensajes = new Mensajes();
 
-        [HttpGet("[action]/{email}/{clave}")]
-        public IActionResult Autenticar(string email, string clave)
-        {
-            Response response = new Response();
-            try
-            {
-                Usuario obj = datos.Autenticar(email,clave);
-                response.IsSuccessful = true;
-                response.Data = obj;
-            }
-            catch (Exception ex)
-            {
-                response.Message = ex.Message;
-                logDA.LogEventoIngresar(ex);
-            }
-
-            return Ok(response);
-        }
-
+      
         public IActionResult Get()
         {
             Response response = new Response();
             try
             {
-                List<Usuario> list = datos.ObtenerTodos(); 
+                List<Ingreso> list = datos.ObtenerTodos();
                 response.IsSuccessful = true;
                 response.Data = list;
             }
@@ -55,16 +37,16 @@ namespace EcoApp.Server.Controllers
             }
 
             return Ok(response);
-          }
+        }
 
 
         [HttpGet("[action]/{id:length(24)}")]
-        public ActionResult<Usuario> GetById(string id)
+        public ActionResult<Ingreso> GetById(string id)
         {
             Response response = new Response();
             try
             {
-                Usuario obj = datos.Obtener(id);
+                Ingreso obj = datos.Obtener(id);
                 response.IsSuccessful = true;
                 response.Data = obj;
             }
@@ -78,7 +60,7 @@ namespace EcoApp.Server.Controllers
         }
 
         [HttpPost]
-        public IActionResult Add(Usuario model)
+        public IActionResult Add(Ingreso model)
         {
             Response response = new Response();
             try

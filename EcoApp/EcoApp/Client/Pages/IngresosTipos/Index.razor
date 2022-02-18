@@ -1,0 +1,92 @@
+﻿@page "/indexingresostipos"
+@using EcoApp.Shared
+@inject HttpClient Http
+@using MatBlazor
+@inject NavigationManager navigationManager
+@*@using Helpers*@
+@using Newtonsoft.Json;
+@inject ServicioSingleton singleton
+
+
+<div class="row alert bg-info">
+    <div class="col-md-5">
+        <h5> <b>TIPOS DE INGRESOS</b></h5>
+    </div>
+</div>
+
+
+<div class="col-md-2">
+    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_box" Text="Nuevo" Size="ButtonSize.Medium" Click="@Add">
+    </RadzenButton>
+</div>
+
+<RadzenGrid AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowPaging="true" PageSize="20"
+            AllowSorting="true" Data="@list" TItem="IngresoTipo" ColumnWidth="200px">
+    <Columns>
+        <RadzenGridColumn TItem="IngresoTipo" Property="Nombre" Title="Nombre" Width="100%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="IngresoTipo" Property="EstadoDescripcion" Title="Estado" Width="50%"></RadzenGridColumn>
+
+        <RadzenGridColumn TItem="IngresoTipo" Context="IngresoTipo" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="50%">
+            <Template Context="IngresoTipo">
+
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Text="Editar" Size="ButtonSize.Medium" Click="@((args) =>Edit(IngresoTipo.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+        @*<RadzenGridColumn TItem="GastoTipo" Context="GastoTipo" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="50%">
+            <Template Context="GastoTipo">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Eliminar" Size="ButtonSize.Medium" Click="@((args) =>Delete(GastoTipo.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>*@
+
+
+
+    </Columns>
+</RadzenGrid>
+
+
+
+
+
+@code {
+
+
+    List<IngresoTipo> list;
+    Response response = new Response();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    protected async Task LoadData()
+    {
+        response = await Http.GetFromJsonAsync<Response>($"api/ingresostipos");
+        if (response.IsSuccessful)
+        {
+            list = JsonConvert.DeserializeObject<List<IngresoTipo>>(response.Data.ToString());
+        }
+
+    }
+
+
+    public void Add()
+    {
+        navigationManager.NavigateTo("/formingresostipos");
+    }
+
+
+    public void Edit(string id)
+    {
+        navigationManager.NavigateTo("/formingresostipos/" + id);
+    }
+
+
+
+
+    public void Delete(string id)
+    {
+        navigationManager.NavigateTo("/ingresostipos/" + id);
+    }
+}

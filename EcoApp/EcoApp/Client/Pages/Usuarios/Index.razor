@@ -18,21 +18,6 @@
         <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_box" Text="Nuevo" Size="ButtonSize.Medium" Click="@Add">
         </RadzenButton>
     </div>
-
-    <div class="col-md-3">
-        <input class="bg-light" type="file" @ref="@inputElement" accept=".xls, .xlsx">
-    </div>
-
-
-</div>
-<br>
-<div class="row">
-    <div class="col-md-2">
-    </div>
-    <div class="col-md-2">
-        <a href="../PlantillasExcel/Empleados.xlsx" target="_blank">Descargar Plantilla</a>
-    </div>
-
 </div>
 
 <RadzenGrid AllowFiltering="true"
@@ -50,7 +35,8 @@
         <RadzenGridColumn TItem="Usuario" Property="Celular" Title="Celular" Width="50%"></RadzenGridColumn>
         <RadzenGridColumn TItem="Usuario" Property="NumeroCasa" Title="Casa N°" Width="30%"></RadzenGridColumn>
         <RadzenGridColumn TItem="Usuario" Property="RolDescripcion" Title="Rol" Width="50%"></RadzenGridColumn>
-        <RadzenGridColumn TItem="Usuario" Property="EstadoDescripcion" Title="Estado" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Usuario" Property="EstadoPorteroDescripcion" Title="EstadoPortero" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Usuario" Property="EstadoUsuarioDescripcion" Title="EstadoUsuario" Width="50%"></RadzenGridColumn>
         <RadzenGridColumn TItem="Usuario" Context="Usuario" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="100%">
             <Template Context="Usuario">
                 <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Text="Editar" Size="ButtonSize.Medium" Click="@((args) =>Edit(Usuario.Id))">
@@ -82,15 +68,6 @@
         if (response.IsSuccessful)
         {
             list = JsonConvert.DeserializeObject<List<Usuario>>(response.Data.ToString());
-
-            list.Where(x => x.Estado == true).ToList().ForEach(i => i.EstadoDescripcion = "ACTIVO");
-            list.Where(x => x.Estado == false).ToList().ForEach(i => i.EstadoDescripcion = "INACTIVO");
-
-            list.Where(x => x.Rol == "1").ToList().ForEach(i => i.RolDescripcion = "ADMINISTRADOR");
-            list.Where(x => x.Rol == "2").ToList().ForEach(i => i.RolDescripcion = "PROPIERTARIO");
-            list.Where(x => x.Rol == "3").ToList().ForEach(i => i.RolDescripcion = "ARRENDATARIO");
-            list.Where(x => x.Rol == "4").ToList().ForEach(i => i.RolDescripcion = "TRABAJADOR");
-
         }
     }
 

@@ -1,0 +1,84 @@
+﻿@page "/indexauditoria"
+@using EcoApp.Shared
+@inject HttpClient Http
+@using MatBlazor
+@inject NavigationManager navigationManager
+@using Newtonsoft.Json;
+@inject ServicioSingleton singleton
+
+
+<div class="row alert bg-info">
+    <div class="col-md-5">
+        <h5> <b>AUDITORIA</b></h5>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-2">
+        <RadzenButton ButtonStyle="ButtonStyle.Secondary" Icon="cloud_download" Text="Exportar Excel" Size="ButtonSize.Medium" Click="@(async() => await DownloadFile())">
+        </RadzenButton>
+    </div>
+</div>
+<RadzenGrid AllowColumnResize="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowPaging="true" PageSize="20"
+            AllowSorting="true" Data="@list" TItem="Auditoria" ColumnWidth="200px">
+    <Columns>
+        <RadzenGridColumn TItem="Auditoria" Property="FechaRegistroStr" Title="Fecha" Width="40%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Auditoria" Property="UsuarioNombre" Title="UsuarioNombre" Width="70%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Auditoria" Property="Accion" Title="Acción" Width="40%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Auditoria" Property="Mensaje" Title="Mensaje" Width="100%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Auditoria" Context="Auditoria" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="100%">
+            <Template Context="Auditoria">
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="pageview" Text="Detalle" Size="ButtonSize.Medium" Click="@((args) =>Detalle(Auditoria.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+
+    </Columns>
+</RadzenGrid>
+
+
+
+@code {
+
+
+    List<Auditoria> list;
+    Response response = new Response();
+    public int IsDownloadStarted { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    protected async Task LoadData()
+    {
+        response = await Http.GetFromJsonAsync<Response>($"api/auditoria");
+        if (response.IsSuccessful)
+        {
+            list = JsonConvert.DeserializeObject<List<Auditoria>>(response.Data.ToString());
+        }
+
+    }
+
+    public void Detalle(string id)
+    {
+        navigationManager.NavigateTo("/formauditoria/" + id);
+    }
+
+
+
+    protected async Task DownloadFile()
+    {
+        //    IsDownloadStarted = 1;
+        //    StateHasChanged();
+
+
+        //    var response = await Http.GetAsync($"api/files/DownloadExcel/{singleton.EmpresaId}");
+        //    response.EnsureSuccessStatusCode();
+        //    var fileBytes = await response.Content.ReadAsByteArrayAsync();
+        //    var fileName = $"Empleados{DateTime.Now.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)}.xlsx";
+        //    await JSRuntime.InvokeAsync<object>("saveAsFile", fileName, Convert.ToBase64String(fileBytes));
+        //    IsDownloadStarted = 2;
+    }
+
+}

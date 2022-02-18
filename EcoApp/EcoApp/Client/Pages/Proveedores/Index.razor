@@ -1,0 +1,87 @@
+﻿@page "/indexproveedores"
+@using EcoApp.Shared
+@inject HttpClient Http
+@inject NavigationManager navigationManager
+@using Newtonsoft.Json;
+@inject IJSRuntime JSRuntime
+@using System.IO
+@inject ServicioSingleton singleton
+
+<div class="row alert bg-info">
+    <div class="col-md-5">
+        <h5> <b>PROVEEDORES</b></h5>
+    </div>
+</div>
+<br />
+<div class="row">
+    <div class="col-md-2">
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_box" Text="Nuevo" Size="ButtonSize.Medium" Click="@Add">
+        </RadzenButton>
+    </div>
+</div>
+
+<RadzenGrid AllowFiltering="true"
+            AllowColumnResize="true"
+            FilterMode="FilterMode.Simple"
+            AllowPaging="true"
+            PageSize="20"
+            AllowSorting="true"
+            Data="@list"
+            TItem="Proveedor"
+            LogicalFilterOperator="LogicalFilterOperator.Or">
+    <Columns>
+        <RadzenGridColumn TItem="Proveedor" Property="RazonSocial" Title="RazonSocial" Width="80%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Proveedor" Property="Nit" Title="Nit" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Proveedor" Property="Email" Title="Email" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Proveedor" Property="Celular" Title="Celular" Width="30%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Proveedor" Property="Telefono" Title="Teléfono" Width="30%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Proveedor" Property="EstadoDescripcion" Title="Estado" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Proveedor" Context="Proveedor" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="100%">
+            <Template Context="Proveedor">
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Text="Editar" Size="ButtonSize.Medium" Click="@((args) =>Edit(Proveedor.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+
+    </Columns>
+</RadzenGrid>
+
+
+
+
+@code {
+
+    List<Proveedor> list;
+    Response response = new Response();
+    ElementReference inputElement;
+    public int IsDownloadStarted { get; set; } = 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await LoadData();
+    }
+
+    protected async Task LoadData()
+    {
+        response = await Http.GetFromJsonAsync<Response>($"api/proveedores");
+        if (response.IsSuccessful)
+        {
+            list = JsonConvert.DeserializeObject<List<Proveedor>>(response.Data.ToString());
+        }
+    }
+
+    public void Add()
+    {
+        navigationManager.NavigateTo("/formproveedores");
+    }
+
+
+    public void Edit(string id)
+    {
+        navigationManager.NavigateTo("/formproveedores/" + id);
+    }
+
+
+}

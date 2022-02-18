@@ -92,6 +92,8 @@
 
     protected async Task Autenticar()
     {
+        model.Email = "santadavid88@gmail.com";
+        model.Clave = "123456";
         try
         {
             result = "";
@@ -115,9 +117,10 @@
                 }
 
 
+
                 if (user.Id!=null)
                 {
-                    if (user.Estado)
+                    if (user.EstadoUsuario)
                     {
 
                         result = "";
@@ -125,7 +128,7 @@
                         singleton.UsuarioId = user.Id;
                         singleton.UsuarioNombre = user.Nombre;
                         singleton.Email = user.Email;
-
+                        singleton.Rol = user.Rol;
                         await RegistrarAuditoria(user);
                         navigationManager.NavigateTo("/index");
                     }
@@ -156,18 +159,18 @@
     protected async Task RegistrarAuditoria(Usuario model)
     {
 
-        //Auditoria auditoria = new Auditoria();
-        //auditoria.EmpresaId = singleton.EmpresaId;
-        //auditoria.Accion = "INICIARSESION";
-        //auditoria.Tabla = "NA";
-        //auditoria.Usuario = model.Email;
-        //auditoria.UsuarioNombre = model.NombreCompleto;
-        //auditoria.UsuarioRegistroId = model.Id;
+        Auditoria auditoria = new Auditoria();
+        auditoria.Accion = "INICIARSESION";
+        auditoria.Tabla = "NA";
+        auditoria.Usuario = model.Email;
+        auditoria.UsuarioNombre = model.Nombre;
+        auditoria.UsuarioRegistroId = model.Id;
+        auditoria.FechaRegistro = DateTime.Now;
 
-        //auditoria.Mensaje = "El siguiente usuario inicio sesión: " + "----Id: " + model.Id + "----NombreCompleto:" + model.NombreCompleto + "----Email: " + model.Email;
+        auditoria.Mensaje = "El siguiente usuario inicio sesión: " + "----Id: " + model.Id + "----NombreCompleto:" + model.Nombre + "----Email: " + model.Email;
 
 
-        //await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
+        await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
 
     }
 }

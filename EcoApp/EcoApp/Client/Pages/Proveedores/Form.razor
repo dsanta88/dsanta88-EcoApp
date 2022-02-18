@@ -1,5 +1,5 @@
-﻿@page "/formusuarios"
-@page "/formusuarios/{Id}"
+﻿@page "/formproveedores"
+@page "/formproveedores/{Id}"
 @using EcoApp.Shared
 @inject HttpClient Http
 @using MatBlazor
@@ -35,65 +35,48 @@
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-4">
-            <MatStringField @bind-Value="@model.Nombre" Label="Nombre" Style="width:100%" Required="true"></MatStringField>
+            <MatStringField @bind-Value="@model.RazonSocial" Label="Razon Social" Style="width:100%" Required="true"></MatStringField>
         </div>
         <div class="col-md-1"></div>
         <div class="col-md-4">
-            <a>Numero de casa</a>
-            <RadzenDropDown AllowClear="true"
-                            AllowFiltering="true"
-                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                            @bind-Value="model.NumeroCasa"
-                            Multiple="false"
-                            Placeholder="[SELECCIONAR]"
-                            Data="@lstHouses"
-                            TextProperty="Name"
-                            ValueProperty="Code"
-                            Style="width:100%" />
-
+            <MatStringField @bind-Value="@model.Nit" Label="Nit" Style="width:100%"></MatStringField>
         </div>
     </div>
     <br />
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-4">
-            <MatStringField @bind-Value="@model.Email" Label="Email" Type="email" Style="width:100%" Required="true"></MatStringField>
-        </div>
-        <div class="col-md-1"></div>
-        <div class="col-md-4">
-            <MatStringField @bind-Value="@model.Clave" Type="password" Label="Clave" Style="width:100%" Required="true"></MatStringField>
-        </div>
-    </div>
-    <br />
-
-    <div class="row">
-        <div class="col-md-1"></div>
-        <div class="col-md-4">
-            <MatStringField @bind-Value="@model.Celular" Type="number" Label="Celular" Style="width:100%" Required="true"></MatStringField>
-        </div>
-        <div class="col-md-1"></div>
-        <div class="col-md-4">
-            <MatStringField @bind-Value="@model.Direccion" Label="Dirección" Style="width:100%"></MatStringField>
-        </div>
-
-
-    </div>
-    <br />
-    <div class="row">
-        <div class="col-md-1"></div>
-        <div class="col-md-4">
-            <MatSelect Label="Rol" @bind-Value="model.Rol">
+            <MatSelect Label="Tipo de proveedor" @bind-Value="model.Tipo">
                 <MatOptionString></MatOptionString>
-                <MatOptionString Value="1">ADMINISTRADOR</MatOptionString>
-                <MatOptionString Value="2">PROPIETARIO</MatOptionString>
-                <MatOptionString Value="3">ARRENDATARIO</MatOptionString>
-                <MatOptionString Value="4">TRABAJADOR</MatOptionString>
-                <MatOptionString Value="5">VECINO</MatOptionString>
+                <MatOptionString Value="1">EMPRESA</MatOptionString>
+                <MatOptionString Value="2">PERSONA NATURAL</MatOptionString>
             </MatSelect>
         </div>
         <div class="col-md-1"></div>
         <div class="col-md-4">
-            <MatSelect Label="Estado Portero" @bind-Value=@model.EstadoPortero Required="true">
+            <MatStringField @bind-Value="@model.Telefono" Label="Teléfono" Style="width:100%"></MatStringField>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatStringField @bind-Value="@model.Email" Label="Email" Type="email" Style="width:100%"></MatStringField>
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatStringField @bind-Value="@model.Celular" Label="Celular" Style="width:100%" Required="true"></MatStringField>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatStringField @bind-Value="@model.Direccion" Label="Dirección" Style="width:100%" ></MatStringField>
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <MatSelect Label="Estado" @bind-Value=@model.Estado Required="true">
                 <MatOption Value=true>ACTIVO</MatOption>
                 <MatOption Value=false>INACTIVO</MatOption>
             </MatSelect>
@@ -102,14 +85,13 @@
     <br />
     <div class="row">
         <div class="col-md-1"></div>
-        <div class="col-md-4">
-            <MatSelect Label="Estado Usuario" @bind-Value=@model.EstadoUsuario Required="true">
-                <MatOption Value=true>ACTIVO</MatOption>
-                <MatOption Value=false>INACTIVO</MatOption>
-            </MatSelect>
+        <div class="col-md-9">
+            <b>Observación</b>
+            <MatTextField @bind-Value="@model.Observacion" TextArea="true" Style="width:100%"></MatTextField>
         </div>
     </div>
     <hr />
+
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-2">
@@ -118,6 +100,7 @@
             </MatThemeProvider>
         </div>
         <div class="col-md-2">
+
             @if (visibleGuardar)
             {
                 <MatThemeProvider Theme="@theme1">
@@ -132,14 +115,11 @@
 
     [Parameter] public string Id { get; set; }
 
-    public Usuario model = new Usuario();
+    public Proveedor model = new Proveedor();
     Response response = new Response();
     string titulo = "";
     string msgError = null;
-    List<House> lstHouses = new List<House>();
     bool visibleGuardar = true;
-
-
     MatTheme theme1 = new MatTheme()
     {
         Primary = "green",
@@ -153,8 +133,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        model = new Usuario();
-        GetHouses();
+
         await LoadData();
     }
 
@@ -164,8 +143,8 @@
     {
         visibleGuardar = false;
         string accion = "";
-        model.Nombre = model.Nombre.ToUpper();
-        if (model.Direccion != null)
+        model.RazonSocial = model.RazonSocial.ToUpper();
+        if(model.Direccion!=null)
         {
             model.Direccion = model.Direccion.ToUpper();
         }
@@ -174,19 +153,21 @@
             model.Email = model.Email.ToLower();
         }
 
+
+        model.UsuarioRegistroId = singleton.UsuarioId;
+        model.FechaRegistro = DateTime.Now;
+
         msgError = null;
 
         if (model.Celular.Length != 10)
         {
             msgError = "El celular debe tener 11 digitos";
         }
-        if (model.Rol == "" || model.Rol == null)
-        {
-            msgError = "Debe seleccionar el rol";
-        }
+
 
         if (msgError == null)
         {
+
             if (Id != null)
             {
                 accion = "Editar";
@@ -196,13 +177,13 @@
                 accion = "Ingresar";
             }
 
-            var result = await Http.PostAsJsonAsync<Usuario>($"api/Usuarios", model);
+            var result = await Http.PostAsJsonAsync<Proveedor>($"api/Proveedores", model);
             response = result.Content.ReadFromJsonAsync<Response>().Result;
 
             if (response.IsSuccessful)
             {
                 await RegistrarAuditoria(model, accion);
-                navigationManager.NavigateTo("/indexusuarios");
+                navigationManager.NavigateTo("/indexproveedores");
             }
             else
             {
@@ -219,55 +200,33 @@
 
     public void Cancelar()
     {
-        navigationManager.NavigateTo("/indexusuarios");
+        navigationManager.NavigateTo("/indexproveedores");
     }
 
 
     protected async Task LoadData()
     {
-        model = new Usuario();
+        model = new Proveedor();
 
 
         if (Id != null)
         {
-            titulo = "EDITAR USUARIO";
-            response = await Http.GetFromJsonAsync<Response>($"api/usuarios/GetById/{Id}");
+            titulo = "EDITAR PROVEEDOR";
+            response = await Http.GetFromJsonAsync<Response>($"api/proveedores/GetById/{Id}");
             if (response.IsSuccessful)
             {
-                model = JsonConvert.DeserializeObject<Usuario>(response.Data.ToString());
+                model = JsonConvert.DeserializeObject<Proveedor>(response.Data.ToString());
             }
 
         }
         else
         {
-            model.EstadoPortero = true;
-            model.EstadoUsuario = true;
-            titulo = "NUEVO USUARIO";
+            model.Estado = true;
+            titulo = "NUEVO PROVEEDOR";
         }
     }
 
-
-    public bool GetHouses()
-    {
-
-        for (int i = 0; i <= 50; i++)
-        {
-            House house = new House();
-            house.Code = i;
-            house.Name = " CASA " + i.ToString();
-            lstHouses.Add(house);
-        }
-
-        return true;
-    }
-
-    public class House
-    {
-        public int Code { get; set; }
-        public string Name { get; set; }
-    }
-
-    protected async Task RegistrarAuditoria(Usuario model, string accion)
+    protected async Task RegistrarAuditoria(Proveedor model, string accion)
     {
         string accionDescipcion = "";
 
@@ -284,57 +243,38 @@
             accionDescipcion = "elimino";
         }
 
-        if (model.EstadoPortero)
+        string tipoDescripcion = "";
+        if (model.Tipo=="1")
         {
-            model.EstadoPorteroDescripcion = "ACTIVO";
+            tipoDescripcion = "EMPRESA";
         }
         else
         {
-            model.EstadoPorteroDescripcion = "INACTIVO";
+            tipoDescripcion = "PERSONA NATURAL";
         }
 
 
-        if (model.EstadoUsuario)
+        if (model.Estado)
         {
-            model.EstadoUsuarioDescripcion = "ACTIVO";
+            model.EstadoDescripcion = "ACTIVO";
         }
         else
         {
-            model.EstadoUsuarioDescripcion = "INACTIVO";
-        }
-
-        if (model.Rol=="1")
-        {
-            model.RolDescripcion = "ADMINISTRADOR";
-        }
-        else if (model.Rol == "2")
-        {
-            model.RolDescripcion = "PROPIERTARIO";
-        }
-        else if (model.Rol == "3")
-        {
-            model.RolDescripcion = "ARRENDATARIO";
-        }
-        else if (model.Rol == "4")
-        {
-            model.RolDescripcion = "TRABAJADOR";
-        }
-        else if (model.Rol == "5")
-        {
-            model.RolDescripcion = "VECINO";
+            model.EstadoDescripcion = "INACTIVO";
         }
 
         Auditoria auditoria = new Auditoria();
         auditoria.Accion = accion;
-        auditoria.Tabla = "Usuarios";
+        auditoria.Tabla = "Proveedores";
         auditoria.Usuario = singleton.Email;
         auditoria.UsuarioNombre = singleton.UsuarioNombre;
         auditoria.UsuarioRegistroId = singleton.UsuarioId;
         auditoria.FechaRegistro = DateTime.Now;
 
-        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente Usuario:----" + "Id: " + model.Id + "----Nombre:" + model.Nombre + "----Email: " + model.Email + "----Celular:" + model.Celular + "----Rol:" + model.Rol + "----Dirección:" + model.Direccion + "----EstadoPortero:" + model.EstadoPorteroDescripcion + "----EstadoUsuario:" + model.EstadoUsuarioDescripcion;
+        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente Proveedor:----" + "Id: " + model.Id + "----RazonSocial:" + model.RazonSocial + "----Nit: " + model.Nit + "----TipoProveedor:" + tipoDescripcion + "----Email:" + model.Email + "----Celular:" + model.Celular + "----Teléfono:" + model.Telefono + "----Observación:" + model.Observacion + "----Estado:" + model.EstadoDescripcion;
 
         await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
 
     }
+
 }

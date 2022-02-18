@@ -1,0 +1,217 @@
+﻿@page "/formgastostipos"
+@page "/formgastostipos/{Id}"
+@using EcoApp.Shared
+@inject HttpClient Http
+@using MatBlazor
+@inject NavigationManager navigationManager
+@using Newtonsoft.Json;
+@inject ServicioSingleton singleton
+@inject IJSRuntime js
+
+
+<div class="row alert bg-info">
+    <div class="row col-md-1">
+
+    </div>
+    <div class="col-md-5">
+        <h5> <b>@titulo</b></h5>
+    </div>
+</div>
+
+@if (msgError != null)
+{
+    <div class="row alert bg-danger">
+        <div class="row col-md-1">
+
+        </div>
+        <div class="col-md-5">
+            <MatThemeProvider>
+                <MatIcon Icon="cancel"> </MatIcon>   @msgError
+            </MatThemeProvider>
+        </div>
+    </div>
+}
+
+
+
+<EditForm Model="@model" OnValidSubmit="Save">
+
+
+
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-5">
+            <MatStringField @bind-Value="@model.Nombre" Label="Nombre" Style="width:100%" Required="true"></MatStringField>
+        </div>
+    </div>
+    <br />
+
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-5">
+            <MatSelect Label="Estado" @bind-Value=@model.Estado Required="true">
+                <MatOption Value=true>ACTIVO</MatOption>
+                <MatOption Value=false>INACTIVO</MatOption>
+            </MatSelect>
+        </div>
+    </div>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-2">
+            <MatThemeProvider Theme="@theme3">
+                <MatButton Raised="true" Icon="cancel" @onclick="Cancelar">Cancelar</MatButton>
+            </MatThemeProvider>
+        </div>
+        <br />
+        @if (visibleGuardar)
+        {
+            <div class="col-md-2">
+
+                <MatThemeProvider Theme="@theme1">
+                    <MatButton Raised="true" Icon="save" Type="submit">Guardar</MatButton>
+                </MatThemeProvider>
+            </div>
+        }
+
+    </div>
+</EditForm>
+<br />
+@code {
+
+    [Parameter]
+    public string Id { get; set; }
+    string titulo = "";
+    string msgError = null;
+    public GastoTipo model = new GastoTipo();
+    Response response = new Response();
+    bool visibleGuardar = true;
+    public int codigoInicial = 0;
+
+    MatTheme theme1 = new MatTheme()
+    {
+        Primary = "green",
+    };
+    MatTheme theme3 = new MatTheme()
+    {
+        Primary = "red",
+    };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    protected async Task Save()
+    {
+        string accion = "";
+        visibleGuardar = false;
+        msgError = null;
+        model.Nombre = model.Nombre.ToUpper();
+
+
+
+        if (msgError == null)
+        {
+            if (Id != null)
+            {
+                accion = "Editar";
+            }
+            else
+            {
+                accion = "Ingresar";
+            }
+
+            var result = await Http.PostAsJsonAsync<GastoTipo>($"api/gastostipos", model);
+            response = result.Content.ReadFromJsonAsync<Response>().Result;
+
+
+            if (response.IsSuccessful)
+            {
+                await RegistrarAuditoria(model, accion);
+                navigationManager.NavigateTo("/indexgastostipos");
+            }
+            else
+            {
+                msgError = response.Message;
+                await js.InvokeAsync<string>("MensajeAlerta", msgError);
+            }
+        }
+        else
+        {
+            await js.InvokeAsync<string>("MensajeAlerta", msgError);
+        }
+        visibleGuardar = true;
+    }
+
+    protected async Task Cancelar()
+    {
+        navigationManager.NavigateTo("/indexgastostipos");
+    }
+
+
+    protected async Task LoadData()
+    {
+
+        model = new GastoTipo();
+        if (Id != null)
+        {
+            titulo = "EDITAR TIPO DE GASTO";
+            response = await Http.GetFromJsonAsync<Response>($"api/gastostipos/GetById/{Id}");
+            if (response.IsSuccessful)
+            {
+                model = JsonConvert.DeserializeObject<GastoTipo>(response.Data.ToString());
+            }
+        }
+        else
+        {
+            model.Estado = true;
+            titulo = "NUEVO TIPO DE GASTO";
+        }
+    }
+
+
+
+    protected async Task RegistrarAuditoria(GastoTipo model, string accion)
+    {
+        string accionDescipcion = "";
+
+        if (accion.ToLower() == "editar")
+        {
+            accionDescipcion = "edito";
+        }
+        else if (accion.ToLower() == "ingresar")
+        {
+            accionDescipcion = "ingreso";
+        }
+        else if (accion.ToLower() == "eliminar")
+        {
+            accionDescipcion = "elimino";
+        }
+
+
+        if (model.Estado)
+        {
+            model.EstadoDescripcion = "ACTIVO";
+        }
+        else
+        {
+            model.EstadoDescripcion = "INACTIVO";
+        }
+
+        Auditoria auditoria = new Auditoria();
+        auditoria.Accion = accion;
+        auditoria.Tabla = "GastosTipos";
+        auditoria.Usuario = singleton.Email;
+        auditoria.UsuarioNombre = singleton.UsuarioNombre;
+        auditoria.UsuarioRegistroId = singleton.UsuarioId;
+
+        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente tipo de gasto:----" + "Id: " + model.Id + "----Nombre: " + model.Nombre + "----Estado:" + model.EstadoDescripcion;
+
+        await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
+
+    }
+
+}
