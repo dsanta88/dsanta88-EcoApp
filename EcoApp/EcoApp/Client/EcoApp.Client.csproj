@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\Upload\Ingresos\" />
+    <Folder Include="wwwroot\Upload\Gastos\" />
   </ItemGroup>
 
 </Project>

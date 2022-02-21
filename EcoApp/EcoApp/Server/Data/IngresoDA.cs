@@ -42,11 +42,13 @@ namespace EcoApp.Server.Data
                 var result = (from ingre in ingresos.AsQueryable()
                               join ingreTip in ingresosTipos.AsQueryable() on ingre.IngresoTipoId equals ingreTip.Id
                               join usu in usuarios.AsQueryable() on ingre.UsuarioId equals usu.Id
-                              where( ingre.Id==id  || id=="-1")
+                              where (ingre.Id == id || id == "-1")
                               select new
                               {
                                   IngresoId = ingre.Id,
+                                  IngresoTipoId = ingre.IngresoTipoId,
                                   IngresoTipoNombre = ingreTip.Nombre,
+                                  IngresoUsuarioId=ingre.UsuarioId,
                                   IngresoUsuarioNombre = usu.Nombre,
                                   ingre.Valor,
                                   ingre.ArchivoRuta,
@@ -61,6 +63,8 @@ namespace EcoApp.Server.Data
                     obj.Id = item.IngresoId;
                     obj.IngresoTipoNombre = item.IngresoTipoNombre;
                     obj.IngresoUsuarioNombre = item.IngresoUsuarioNombre;
+                    obj.IngresoTipoId = item.IngresoTipoId;
+                    obj.UsuarioId = item.IngresoUsuarioId;
                     obj.Valor = item.Valor;
                     obj.ArchivoRuta = item.ArchivoRuta;
                     obj.FechaPago = item.FechaPago;

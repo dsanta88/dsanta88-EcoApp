@@ -1,0 +1,81 @@
+﻿@page "/indexcomunicados"
+@using EcoApp.Shared
+@inject HttpClient Http
+@using MatBlazor
+@inject NavigationManager navigationManager
+@*@using Helpers*@
+@using Newtonsoft.Json;
+@inject ServicioSingleton singleton
+
+
+<div class="row alert bg-info">
+    <div class="col-md-5">
+        <h5> <b>COMUNICADOS</b></h5>
+    </div>
+</div>
+
+
+<div class="col-md-2">
+    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_box" Text="Nuevo" Size="ButtonSize.Medium" Click="@Add">
+    </RadzenButton>
+</div>
+
+<RadzenGrid AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowPaging="true" PageSize="20"
+            AllowSorting="true" Data="@list" TItem="Comunicado" ColumnWidth="200px">
+    <Columns>
+        <RadzenGridColumn TItem="Comunicado" Property="Titulo" Title="Título" Width="100%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Comunicado" Property="EstadoDescripcion" Title="Estado" Width="50%"></RadzenGridColumn>
+
+        <RadzenGridColumn TItem="Comunicado" Context="GastoTipo" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="50%">
+            <Template Context="Comunicado">
+
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Text="Editar" Size="ButtonSize.Medium" Click="@((args) =>Edit(Comunicado.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+    </Columns>
+</RadzenGrid>
+
+
+
+
+
+@code {
+
+
+    List<Comunicado> list;
+    Response response = new Response();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    protected async Task LoadData()
+    {
+        response = await Http.GetFromJsonAsync<Response>($"api/comunicados");
+        if (response.IsSuccessful)
+        {
+            list = JsonConvert.DeserializeObject<List<Comunicado>>(response.Data.ToString());
+        }
+
+    }
+
+
+    public void Add()
+    {
+        navigationManager.NavigateTo("/formcomunicados");
+    }
+
+
+    public void Edit(string id)
+    {
+        navigationManager.NavigateTo("/formcomunicados/" + id);
+    }
+
+
+    public void Delete(string id)
+    {
+        navigationManager.NavigateTo("/deletegastostipos/" + id);
+    }
+}

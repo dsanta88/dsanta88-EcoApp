@@ -1,0 +1,95 @@
+﻿@page "/indexgastos"
+@using EcoApp.Shared
+@inject HttpClient Http
+@inject NavigationManager navigationManager
+@using Newtonsoft.Json;
+@inject IJSRuntime JSRuntime
+@using System.IO
+@inject ServicioSingleton singleton
+
+<div class="row alert bg-info">
+    <div class="col-md-5">
+        <h5> <b>GASTOS</b></h5>
+    </div>
+
+</div>
+<br />
+<div class="row">
+    <div class="col-md-2">
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_box" Text="Nuevo" Size="ButtonSize.Medium" Click="@Add">
+        </RadzenButton>
+    </div>
+</div>
+
+<RadzenGrid AllowFiltering="true"
+            AllowColumnResize="true"
+            FilterMode="FilterMode.Simple"
+            AllowPaging="true"
+            PageSize="20"
+            AllowSorting="true"
+            Data="@list"
+            TItem="Gasto"
+            LogicalFilterOperator="LogicalFilterOperator.Or">
+    <Columns>
+        <RadzenGridColumn TItem="Gasto" Property="FechaPago" Title="FechaPago" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Gasto" Property="GastoTipoNombre" Title="Tipo" Width="60%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Gasto" Property="ProveedorNombre" Title="Proveedor" Width="60%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Gasto" Property="Valor" Title="Valor" Width="50%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Gasto" Context="Gasto" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="100%">
+            <Template Context="Gasto">
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Text="Editar" Size="ButtonSize.Medium" Click="@((args) =>Edit(Gasto.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+        <RadzenGridColumn TItem="Gasto" Context="Gasto" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="50%">
+            <Template Context="Gasto">
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="cancel" Text="Eliminar" Size="ButtonSize.Medium" Click="@((args) =>Delete(Gasto.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+
+    </Columns>
+</RadzenGrid>
+
+
+
+
+@code {
+
+    List<Gasto> list;
+    Response response = new Response();
+    ElementReference inputElement;
+    public int IsDownloadStarted { get; set; } = 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await LoadData();
+    }
+
+    protected async Task LoadData()
+    {
+        response = await Http.GetFromJsonAsync<Response>($"api/gastos");
+        if (response.IsSuccessful)
+        {
+            list = JsonConvert.DeserializeObject<List<Gasto>>(response.Data.ToString());
+        }
+    }
+
+    public void Add()
+    {
+        navigationManager.NavigateTo("/formgastos");
+    }
+
+
+    public void Edit(string id)
+    {
+        navigationManager.NavigateTo("/formgastos/" + id);
+    }
+
+    public void Delete(string id)
+    {
+        navigationManager.NavigateTo("/deletegastos/" + id);
+    }
+}

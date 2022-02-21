@@ -1,0 +1,79 @@
+﻿@page "/indexroles"
+@using EcoApp.Shared
+@inject HttpClient Http
+@using MatBlazor
+@inject NavigationManager navigationManager
+@*@using Helpers*@
+@using Newtonsoft.Json;
+@inject ServicioSingleton singleton
+
+
+<div class="row alert bg-info">
+    <div class="col-md-5">
+        <h5> <b>ROLES</b></h5>
+    </div>
+</div>
+
+
+<div class="col-md-2">
+    <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_box" Text="Nuevo" Size="ButtonSize.Medium" Click="@Add">
+    </RadzenButton>
+</div>
+
+<RadzenGrid AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowPaging="true" PageSize="20"
+            AllowSorting="true" Data="@list" TItem="Rol" ColumnWidth="200px">
+    <Columns>
+        <RadzenGridColumn TItem="Rol" Property="Nombre" Title="Nombre" Width="100%"></RadzenGridColumn>
+        <RadzenGridColumn TItem="Rol" Property="EstadoDescripcion" Title="Estado" Width="50%"></RadzenGridColumn>
+
+        <RadzenGridColumn TItem="Rol" Context="Rol" Bubble="false" Filterable="false" Sortable="false" TextAlign="TextAlign.Left" Width="50%">
+            <Template Context="Rol">
+
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Icon="edit" Text="Editar" Size="ButtonSize.Medium" Click="@((args) =>Edit(Rol.Id))">
+                </RadzenButton>
+            </Template>
+        </RadzenGridColumn>
+
+
+    </Columns>
+</RadzenGrid>
+
+
+
+
+
+@code {
+
+
+    List<Rol> list;
+    Response response = new Response();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    protected async Task LoadData()
+    {
+        response = await Http.GetFromJsonAsync<Response>($"api/roles");
+        if (response.IsSuccessful)
+        {
+            list = JsonConvert.DeserializeObject<List<Rol>>(response.Data.ToString());
+        }
+
+    }
+
+
+    public void Add()
+    {
+        navigationManager.NavigateTo("/formroles");
+    }
+
+
+    public void Edit(string id)
+    {
+        navigationManager.NavigateTo("/formroles/" + id);
+    }
+
+
+}

@@ -1,4 +1,4 @@
-﻿@page "/deleteingresos/{Id}"
+﻿@page "/deletegastos/{Id}"
 @using EcoApp.Shared
 @inject HttpClient Http
 @using MatBlazor
@@ -12,7 +12,7 @@
 
     </div>
     <div class="col-md-5">
-        <h5> <b>ELIMINAR INGRESO</b></h5>
+        <h5> <b>ELIMINAR GASTO</b></h5>
     </div>
 </div>
 
@@ -23,7 +23,7 @@
     </div>
     <div class="col-md-5">
         <MatThemeProvider>
-            <MatIcon Icon="warning"> </MatIcon> Esta  seguro de eliminar el siguiente ingreso?
+            <MatIcon Icon="warning"> </MatIcon> Esta  seguro de eliminar el siguiente gasto?
         </MatThemeProvider>
     </div>
 </div>
@@ -54,16 +54,21 @@
         </div>
         <div class="col-md-1"></div>
         <div class="col-md-5">
-            <MatStringField @bind-Value="@model.IngresoUsuarioNombre" Label="Usuario" Style="width:100%" Disabled="true"></MatStringField>
+            <MatStringField @bind-Value="@model.GastoTipoNombre" Label="Tipo Gasto" Style="width:100%" Disabled="true"></MatStringField>
         </div>
     </div>
     <br />
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-5">
+            <MatStringField @bind-Value="@model.ProveedorRazonSocial" Label="Proveedor" Style="width:100%" Disabled="true"></MatStringField>
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-5">
             <MatTextField @bind-Value="@model.Valor" Label="Valor" Style="width:100%" Disabled="true"></MatTextField>
         </div>
     </div>
+    <br />
     <br />
     @if (model.ArchivoRuta != null)
     {
@@ -97,7 +102,7 @@
     [Parameter]
     public string Id { get; set; }
 
-    public Ingreso model = new Ingreso();
+    public Gasto model = new Gasto();
     Response response = new Response();
     string msgError = null;
 
@@ -119,14 +124,14 @@
     protected async Task DeleteItem()
     {
 
-        var result = await Http.DeleteAsync($"api/ingresos/{Id}");
+        var result = await Http.DeleteAsync($"api/gastos/{Id}");
         response = result.Content.ReadFromJsonAsync<Response>().Result;
 
 
         if (response.IsSuccessful)
         {
             await RegistrarAuditoria(model, "Eliminar");
-            navigationManager.NavigateTo("/indexingresos");
+            navigationManager.NavigateTo("/indexgastos");
         }
         else
         {
@@ -137,7 +142,7 @@
 
     protected async Task Cancelar()
     {
-        navigationManager.NavigateTo("/indexingresos");
+        navigationManager.NavigateTo("/indexgastos");
     }
 
 
@@ -145,16 +150,16 @@
     {
         if (Id != null)
         {
-            response = await Http.GetFromJsonAsync<Response>($"api/ingresos/GetById/{Id}");
+            response = await Http.GetFromJsonAsync<Response>($"api/gastos/GetById/{Id}");
             if (response.IsSuccessful)
             {
-                model = JsonConvert.DeserializeObject<Ingreso>(response.Data.ToString());
+                model = JsonConvert.DeserializeObject<Gasto>(response.Data.ToString());
             }
 
         }
     }
 
-    protected async Task RegistrarAuditoria(Ingreso model, string accion)
+    protected async Task RegistrarAuditoria(Gasto model, string accion)
     {
         string accionDescipcion = "";
 
@@ -175,14 +180,14 @@
 
         Auditoria auditoria = new Auditoria();
         auditoria.Accion = accion.ToUpper();
-        auditoria.Tabla = "Ingresos";
+        auditoria.Tabla = "Gastos";
         auditoria.Usuario = singleton.Email;
         auditoria.UsuarioNombre = singleton.UsuarioNombre;
         auditoria.UsuarioRegistroId = singleton.UsuarioId;
         auditoria.FechaRegistro = DateTime.Now;
 
 
-        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente Ingreso:----" + "Id: " + model.Id + "----FechaPago:" + model.FechaPago + "----TipoIngreso:" + model.IngresoTipoNombre + "----Usuario: " + model.IngresoUsuarioNombre + "----Valor:" + model.Valor;
+        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente Gasto:----" + "Id: " + model.Id + "----FechaPago:" + model.FechaPago + "----TipoGasto:" + model.GastoTipoNombre + "----Proveedor: " + model.ProveedorRazonSocial + "----Responsable: " + model.ResponsableNombre + "----Valor:" + model.Valor;
 
         await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
 

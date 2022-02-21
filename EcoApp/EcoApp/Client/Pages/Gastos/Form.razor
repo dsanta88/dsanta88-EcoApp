@@ -1,5 +1,5 @@
-﻿@page "/formingresos"
-@page "/formingresos/{Id}"
+﻿@page "/formgastos"
+@page "/formgastos/{Id}"
 @using EcoApp.Shared
 @using System.IO
 @inject HttpClient Http
@@ -38,13 +38,13 @@
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-4">
-            <b>Tipo de ingreso</b>
+            <b>Tipo de gasto</b>
             <RadzenDropDown AllowClear="true"
                             AllowFiltering="true"
                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                            @bind-Value="model.IngresoTipoId"
+                            @bind-Value="model.GastoTipoId"
                             Multiple="false" Placeholder="[SELECCIONAR]"
-                            Data="@listIngresosTipos"
+                            Data="@listGastosTipos"
                             TextProperty="Nombre"
                             ValueProperty="Id"
                             Style="width:100%" />
@@ -61,11 +61,32 @@
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col-md-4">
-            <b>Usuario</b>
+            <b>Proveedor</b>
             <RadzenDropDown AllowClear="true"
                             AllowFiltering="true"
                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                            @bind-Value="model.UsuarioId"
+                            @bind-Value="model.ProveedorId"
+                            Multiple="false" Placeholder="[SELECCIONAR]"
+                            Data="@listProveedores"
+                            TextProperty="RazonSocial"
+                            ValueProperty="Id"
+                            Style="width:100%" />
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <b>Valor</b>
+            <MatTextField @bind-Value="@model.Valor" Required="true" Style="width:50%"></MatTextField>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col-md-4">
+            <b>Responsable</b>
+            <RadzenDropDown AllowClear="true"
+                            AllowFiltering="true"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            @bind-Value="model.ResponsableUsuarioId"
                             Multiple="false" Placeholder="[SELECCIONAR]"
                             Data="@listUsuarios"
                             TextProperty="Nombre"
@@ -73,20 +94,10 @@
                             Style="width:100%" />
         </div>
         <div class="col-md-1"></div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <b>Adjuntar documento</b>
             <input class="bg-light" type="file" @ref="@inputElement" accept=".pdf,.png,.jpg,.image ">
         </div>
-
-    </div>
-    <br />
-    <div class="row">
-        <div class="col-md-1"></div>
-        <div class="col-md-4">
-            <b>Valor</b>
-            <MatTextField @bind-Value="@model.Valor" Required="true" Style="width:50%"></MatTextField>
-        </div>
-
     </div>
     <br />
     <div class="row">
@@ -99,14 +110,14 @@
     <br />
     @if (model.ArchivoRuta != null)
     {
-      
-<div class="row">
-    <div class="col-md-1"></div>
-    <div class="col-md-10">
-        <embed src="@model.ArchivoRuta" style="width:100%;height:500px" controls />
-        <br />
-    </div>
-</div>
+
+        <div class="row">
+            <div class="col-md-1"></div>
+            <div class="col-md-10">
+                <embed src="@model.ArchivoRuta" style="width:100%;height:500px" controls />
+                <br />
+            </div>
+        </div>
     }
 
     <hr />
@@ -133,9 +144,11 @@
 
     [Parameter] public string Id { get; set; }
 
-    public Ingreso model = new Ingreso();
+    public Gasto model = new Gasto();
     public List<Usuario> listUsuarios = new List<Usuario>();
-    public List<IngresoTipo> listIngresosTipos = new List<IngresoTipo>();
+    public List<GastoTipo> listGastosTipos = new List<GastoTipo>();
+    public List<Proveedor> listProveedores = new List<Proveedor>();
+
     Response response = new Response();
     string titulo = "";
     string msgError = null;
@@ -166,13 +179,13 @@
 
     public void Cancelar()
     {
-        navigationManager.NavigateTo("/indexingresos");
+        navigationManager.NavigateTo("/indexgastos");
     }
 
 
     protected async Task LoadData()
     {
-        model = new Ingreso();
+        model = new Gasto();
         model.FechaPago = DateTime.Now;
 
         //Usuarios
@@ -183,29 +196,36 @@
             listUsuarios = listUsuarios.Where(x => x.EstadoUsuario == true).ToList();
         }
 
-        //Tipos de ingresos
-        response = await Http.GetFromJsonAsync<Response>($"api/ingresostipos");
+        //Tipos de gastos
+        response = await Http.GetFromJsonAsync<Response>($"api/gastostipos");
         if (response.IsSuccessful)
         {
-            listIngresosTipos = JsonConvert.DeserializeObject<List<IngresoTipo>>(response.Data.ToString());
-            listIngresosTipos = listIngresosTipos.Where(x => x.Estado == true).ToList();
+            listGastosTipos = JsonConvert.DeserializeObject<List<GastoTipo>>(response.Data.ToString());
+            listGastosTipos = listGastosTipos.Where(x => x.Estado == true).ToList();
         }
 
+        //Proveedores
+        response = await Http.GetFromJsonAsync<Response>($"api/proveedores");
+        if (response.IsSuccessful)
+        {
+            listProveedores = JsonConvert.DeserializeObject<List<Proveedor>>(response.Data.ToString());
+            listProveedores = listProveedores.Where(x => x.Estado == true).ToList();
+        }
 
         if (Id != null)
         {
-            titulo = "EDITAR INGRESO";
-            response = await Http.GetFromJsonAsync<Response>($"api/ingresos/GetById/{Id}");
+            titulo = "EDITAR GASTO";
+            response = await Http.GetFromJsonAsync<Response>($"api/gastos/GetById/{Id}");
             if (response.IsSuccessful)
             {
-                model = JsonConvert.DeserializeObject<Ingreso>(response.Data.ToString());
+                model = JsonConvert.DeserializeObject<Gasto>(response.Data.ToString());
                 fileOld = model.ArchivoRuta;
             }
 
         }
         else
         {
-            titulo = "NUEVO INGRESO";
+            titulo = "NUEVO GASTO";
         }
     }
 
@@ -224,11 +244,14 @@
         {
             msgError = "La fecha de pago debe ser menor o igual a la fecha actual.";
         }
-        else if (model.UsuarioId == null)
+        else if (model.ResponsableUsuarioId == null)
         {
-            msgError = "Debe seleccionar el usuario";
+            msgError = "Debe seleccionar el usuario responsable.";
         }
-
+        else if (model.ProveedorId == null)
+        {
+            msgError = "Debe seleccionar el proveedor.";
+        }
         else if (model.Valor <= 0)
         {
             msgError = "El valor debe ser mayor a cero.";
@@ -254,13 +277,13 @@
                     accion = "Ingresar";
                 }
 
-                var result = await Http.PostAsJsonAsync<Ingreso>($"api/ingresos", model);
+                var result = await Http.PostAsJsonAsync<Gasto>($"api/gastos", model);
                 response = result.Content.ReadFromJsonAsync<Response>().Result;
 
                 if (response.IsSuccessful)
                 {
                     await RegistrarAuditoria(model, accion);
-                    navigationManager.NavigateTo("/indexingresos");
+                    navigationManager.NavigateTo("/indexgastos");
                 }
                 else
                 {
@@ -294,7 +317,7 @@
                 var fileInfo = await file.ReadFileInfoAsync();
                 fileExtension = System.IO.Path.GetExtension(fileInfo.Name);
                 fileNombre = DateTime.Now.Year.ToString() + DateTime.Now.Month.ToString() + DateTime.Now.Day.ToString() + DateTime.Now.Hour.ToString() + DateTime.Now.Minute.ToString() + DateTime.Now.Second.ToString() + fileExtension;
-                model.ArchivoRuta = "../Upload/Ingresos/"+fileNombre;
+                model.ArchivoRuta = "../Upload/Gastos/"+fileNombre;
 
                 string ArchivoBase64;
 
@@ -339,7 +362,7 @@
     }
 
 
-    protected async Task RegistrarAuditoria(Ingreso model, string accion)
+    protected async Task RegistrarAuditoria(Gasto model, string accion)
     {
         string accionDescipcion = "";
 
@@ -360,16 +383,17 @@
 
         Auditoria auditoria = new Auditoria();
         auditoria.Accion = accion.ToUpper();
-        auditoria.Tabla = "Ingresos";
+        auditoria.Tabla = "Gastos";
         auditoria.Usuario = singleton.Email;
         auditoria.UsuarioNombre = singleton.UsuarioNombre;
         auditoria.UsuarioRegistroId = singleton.UsuarioId;
         auditoria.FechaRegistro = DateTime.Now;
 
-        string tipoIngreso = listIngresosTipos.Where(x => x.Id == model.IngresoTipoId).FirstOrDefault().Nombre;
-        string usuario = listUsuarios.Where(x => x.Id == model.UsuarioId).FirstOrDefault().Nombre;
+        string tipoGasto = listGastosTipos.Where(x => x.Id == model.GastoTipoId).FirstOrDefault().Nombre;
+        string proveedor = listProveedores.Where(x => x.Id == model.ProveedorId).FirstOrDefault().RazonSocial;
+        string responsableNombre = listUsuarios.Where(x => x.Id == model.ResponsableUsuarioId).FirstOrDefault().Nombre;
 
-        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente Ingreso:----" + "Id: " + model.Id + "----FechaPago:" + model.FechaPago  + "----TipoIngreso:" + tipoIngreso + "----Usuario: " + usuario + "----Valor:" + model.Valor;
+        auditoria.Mensaje = "El usuario " + auditoria.UsuarioNombre + " " + accionDescipcion.ToUpper() + " el siguiente Gasto:----" + "Id: " + model.Id + "----FechaPago:" + model.FechaPago  + "----TipoGasto:" + tipoGasto + "----Proveedor: " + proveedor + "----Responsable: " + responsableNombre + "----Valor:" + model.Valor;
 
         await Http.PostAsJsonAsync<Auditoria>($"api/auditoria", auditoria);
 

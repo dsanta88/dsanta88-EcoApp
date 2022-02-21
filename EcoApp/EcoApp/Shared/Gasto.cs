@@ -20,11 +20,11 @@ namespace EcoApp.Shared
 
         public string ResponsableUsuarioId { get; set; }
 
-        public string Descripcion { get; set; }
+
 
         public string Observacion { get; set; }
 
-        public string RutaArchivo { get; set; }
+        public string ArchivoRuta { get; set; }
 
         public decimal Valor { get; set; }
         public DateTime FechaPago { get; set; }
@@ -35,6 +35,20 @@ namespace EcoApp.Shared
 
 
         [BsonIgnore]
-        public string EstadoDescripcion { get; set; }
+        public string ProveedorNombre { get; set; }
+        [BsonIgnore]
+        public string GastoTipoNombre { get; set; }
+
+        [BsonIgnore]
+        public string ProveedorRazonSocial { get; set; }
+
+        [BsonIgnore]
+        public string ResponsableNombre { get; set; }
+
+        [BsonIgnore]
+        public string GastoUsuarioRegistroNombre { get; set; }
+        
+
+
     }
 }
